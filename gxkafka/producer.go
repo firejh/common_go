@@ -33,6 +33,7 @@ type (
 		brokers          []string
 		compressionType  CompressionCodec
 		ctx              context.Context
+		syncProduceResultCallback func(msg kafka.Message, err error)
 	}
 
 	//压缩类型
@@ -54,6 +55,7 @@ func NewAsyncProducer(
 	waitForAllAck bool,
 	updateMetaDataInterval int,
 	compressionType CompressionCodec,
+	syncProduceResultCallback func(msg kafka.Message, err error),
 ) (Producer, error) {
 	if clientID == "" || brokers == nil || len(brokers) == 0 ||
 		compressionType < CompressionNone || CompressionLZ4 < compressionType {
@@ -66,6 +68,7 @@ func NewAsyncProducer(
 		compressionType: compressionType,
 		producerMap:     make(map[string]*kafka.Writer),
 		ctx:             context.Background(),
+		syncProduceResultCallback:	syncProduceResultCallback,
 	}, nil
 }
 
@@ -95,9 +98,9 @@ func (p *producer) SendMessage(topic string, key interface{}, message interface{
 			Topic:    topic,
 			Balancer: &kafka.LeastBytes{},
 			Async:    true,
+			SyncResultCallBack: p.syncProduceResultCallback,
 		})
 		p.producerMap[topic] = writer
-
 	}
 	writer.WriteMessages(p.ctx, kMsg)
 	p.producerMapMutex.Unlock()

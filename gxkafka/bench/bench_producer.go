@@ -11,6 +11,7 @@ import (
 
 import (
 	"github.com/firejh/common_go/gxkafka"
+	"github.com/firejh/kafka-go"
 )
 
 // usage will print out the flag options for the server.
@@ -23,6 +24,14 @@ func usage() {
 	os.Exit(0)
 }
 
+
+func dftSyncProducerCallback(msg kafka.Message, err error) {
+	if nil != err {
+		fmt.Println("producer err: " + err.Error() + ", key: " + string(msg.Key))
+	} else {
+		fmt.Println("producer success" + ", key: " + string(msg.Key))
+	}
+}
 func main() {
 
 	var (
@@ -45,7 +54,7 @@ func main() {
 	brokerList := strings.Split(brokers, ",")
 	fmt.Println(brokerList)
 
-	producer, err := gxkafka.NewAsyncProducer("1", brokerList, 0, false, 0, gxkafka.CompressionNone)
+	producer, err := gxkafka.NewAsyncProducer("1", brokerList, 0, false, 0, gxkafka.CompressionNone, dftSyncProducerCallback)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -69,6 +78,7 @@ LOOP:
 		if err != nil {
 			fmt.Print(err.Error())
 		}
+		time.Sleep(time.Second)
 		if i%100000 == 0 {
 			fmt.Println("send...\n")
 		}

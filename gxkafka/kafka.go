@@ -2,6 +2,8 @@ package gxkafka
 
 import (
 	"fmt"
+)
+import (
 	"github.com/firejh/kafka-go"
 	"github.com/wvanbergen/kazoo-go"
 )
@@ -17,6 +19,14 @@ type (
 
 func dftConsumerErrorCallback(err error) {
 	fmt.Println(err.Error())
+}
+
+func dftSyncProducerCallback(msg kafka.Message, err error) {
+	if nil != err {
+		fmt.Println("producer err: " + err.Error() + ", key: " + string(msg.Key))
+	} else {
+		fmt.Println("producer success" + ", key: " + string(msg.Key))
+	}
 }
 
 func GetBrokerList(zkHosts string) ([]string, error) {
